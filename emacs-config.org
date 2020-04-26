@@ -1,0 +1,1006 @@
+# -*- mode: org; coding: utf-8 -*-
+#+AUTHOR: yearluk
+#+DATE: 2020-04-19
+#+FILENAME: xolotl.maranlan:~/.emacs.d/emacs-config.org
+#+TAGS: config dotfile emacs
+#+OPTIONS: toc:nil tangle:yes
+
+
+Start to use =orgmode= for the generation of =init.el= as an example of literate programming. End should mean a config file more reading than a regular =init.el= studded with comments.
+
+* PERFORMANCE OPTIMISATIONS
+A hook that reports how long and how many garbage collections the startup took. We use a hook to run it at the very end, so the message doesn’t get clobbered by other messages during startup.
+#+BEGIN_SRC emacs-lisp
+    (add-hook 'emacs-startup-hook
+        (lambda ()
+        (message "Emacs ready in %s with %d garbage collections."
+            (format "%.2f seconds"
+                (float-time
+                (time-subtract after-init-time before-init-time)))
+        gcs-done)))
+
+    (setq gc-cons-threshold 50000000)
+#+END_SRC
+
+Optionally enable debug-on-error.
+#+BEGIN_SRC emacs-lisp
+    (setq debug-on-error t)
+#+END_SRC
+
+
+* ENCODING
+#+BEGIN_SRC emacs-lisp
+    (set-language-environment "UTF-8")
+    (prefer-coding-system 'utf-8)
+    (set-default-coding-systems 'utf-8)
+    (set-terminal-coding-system 'utf-8)
+    (set-keyboard-coding-system 'utf-8)
+    (setq default-buffer-file-coding-system 'utf-8)
+    (setq text-quoting-style 'grave)   ;; do not paste "smart" quotes
+#+END_SRC
+
+* MACBOOK PRO BINDINGS -- disabled for now
+Everybody knows about moving Control to Caps Lock. And then there's this from 
+http://whattheemacsd.com/
+
+#+BEGIN_SRC emacs-lisp
+;;  (setq mac-command-modifier 'meta)
+;;  (setq mac-option-modifier 'super)
+;;  (setq ns-function-modifier 'hyper)
+#+END_SRC
+
+First of all, =Meta M-= needs to be really easy to hit. On a Mac keyboard, that means =Command= - and not the default =Option/Alt= - since we want the key that is right next to Space.
+
+The good news is that one can also bind the Function-key to =Hyper H-= - without losing the ability to change the volume or pause/play.
+
+So now I can use crazy keybindings like =H-SPC= /hyperspace/.
+
+* MY MACHINE
+
+from Harold Abrabs: https://github.com/howardabrams/dot-files/blob/master/emacs.org
+
+** My Directory Location
+
+Normally, the user-emacs-directory stores everything in a .emacs.d directory in the home directory, however, Aquamacs overrides that, and since I now feel the need to use these settings for both editors (sure feels like XEmacs all over again).
+
+Any way, I have a new global variable for that:
+
+#+BEGIN_SRC emacs-lisp
+(defconst sjy/emacs-directory (concat (getenv "HOME") "/.emacs.d/"))
+(defun sjy/emacs-subdirectory (d) (expand-file-name d sjy/emacs-directory))
+#+END_SRC
+
+** Setting up the Load Path
+
+Extra packages not available via the package manager go in my personal stash at: $HOME/.emacs.d/elisp
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'load-path (sjy/emacs-subdirectory "elisp"))
+#+END_SRC
+
+** Set location of =abbrev= definition file
+
+* Defining Abbrevs*
+Type the word you want to use as expansion, and then type C-x a g and the abbreviation for it. Example:
+
+    t h e =C-x a g= t e h RET
+
+Unfortunately, if you wanted to abbreviate Read The Fine Manual with RTFM, you couldn’t just type C-x a g after “Read the Fine Manual”. Emacs would ask you for an abbreviation for Manual. A simple solution is to use a numeric prefix. Note how many words you want to be part of the expansion, and then use C-u 4 C-x a g after “Read the Fine Manual” – four words.
+
+https://www.reddit.com/r/emacs/comments/8rxm7h/tip_how_to_better_manage_your_spelling_mistakes/
+
+http://endlessparentheses.com/ispell-and-abbrev-the-perfect-auto-correct.html
+
+#+BEGIN_SRC emacs-lisp
+(setq abbrev-file-name
+        "~/.emacs.d/abbrev_defs")
+(read-abbrev-file abbrev-file-name t)
+(setq-default abbrev-mode t)    ;; turn on by default
+(setq save-abbrevs 'silently)   ;; save without asking
+(setq dabbrev-case-replace nil) ;; Preserve case when expanding
+
+;; If you only want it on in text and derived modes, you could do something like this:
+;; (add-hook 'text-mode-hook #'abbrev-mode)
+#+END_SRC
+
+
+* PERSONAL INFO. -- BROKEN until I can call in from external file
+#+BEGIN_SRC emacs-lisp
+(load "personal-info")
+
+;; require is for packages: http://ergoemacs.org/emacs/elisp_library_system.html
+;; (require 'personal-info)
+#+END_SRC
+
+
+;; #+BEGIN_SRC emacs-lisp
+;;#+INCLUDE: "./personal-info.org" results
+;; #+INCLUDE: "~/.emacs.d/personal-info.el"
+;;#+SETUPFILE: "~/.emacs.d/personal-info.org"  src emacs-lisp
+;; #+SETUPFILE: "~/.emacs.d/personal-info.el"  src emacs-lisp
+;;#+END_SRC
+
+
+* REMOVE ANNOYANCES
+Emacs has a few annoyances out-of-the-box, so let's rid ourselves of these iniquities.
+#+BEGIN_SRC emacs-lisp
+(setq
+    inhibit-startup-message t
+    inhibit-startup-screen t
+    ring-bell-function 'ignore
+    sentence-end-double-space nil
+    confirm-kill-emacs 'y-or-n-p
+    make-backup-files nil       ;; no annoying backup~ files
+    auto-save-default nil       ;; no annoying #autosave# files
+    create-lockfiles nil)       ;; no annoying .#lock files
+
+(desktop-save-mode 1)           ;; remember last opened files
+(tool-bar-mode 0)
+(scroll-bar-mode 0)
+(menu-bar-mode 0)
+(show-paren-mode 1)             ;; highlight matching parens
+(fset 'yes-or-no-p 'y-or-n-p)   ;; y/n not yes/no for prompts
+(global-auto-revert-mode t)     ;; auto-update file-buffers when changed externally
+(setq confirm-kill-processes nil)    ;; Don't ask to kill processes when exiting.
+
+(define-key key-translation-map (kbd "ESC") (kbd "C-g")) ;; FU muscle memory
+#+END_SRC
+
+* GENERAL
+use CUA: C-x for cut, C-c for copy and  C-v for paste
+#+BEGIN_SRC emacs-lisp
+(cua-mode 1)
+#+END_SRC
+
+Launch Emacs fullscreen.
+#+BEGIN_SRC emacs-lisp
+    (add-to-list 'default-frame-alist '(fullscreen . maximized))
+#+END_SRC
+
+Egregiously stolen from: https://gitlab.com/zzamboni/dot-emacs/-/blob/master/init.org
+
+Load the cl library to enable some additional macros (e.g. lexical-let).
+#+BEGIN_SRC emacs-lisp
+    (require 'cl)
+#+END_SRC
+
+Start the Emacs server NOT YET!
+#+BEGIN_SRC emacs-lisp
+  ;; (server-start)
+#+END_SRC
+
+When =time-stamp= is run before every save, the string =Time-stamp: <>= in the first 8 lines of the file will be updated with the current timestamp.
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'before-save-hook 'time-stamp)
+#+END_SRC
+
+When at the beginning of the line, make =C-k= remove the whole line, instead of just emptying it.
+#+BEGIN_SRC emacs-lisp
+  (customize-set-variable 'kill-whole-line t)
+#+END_SRC
+
+Paste text where the cursor is, not where the mouse is.
+#+BEGIN_SRC emacs-lisp
+  (customize-set-variable 'mouse-yank-at-point t)
+#+END_SRC
+
+Make completion case-insensitive.
+#+BEGIN_SRC emacs-lisp
+  (setq completion-ignore-case t)
+  (customize-set-variable 'read-file-name-completion-ignore-case t)
+  (customize-set-variable 'read-buffer-completion-ignore-case t)
+#+END_SRC
+
+Delete trailing whitespace before saving a file. This will likely fuck with markdown files.
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'before-save-hook 'delete-trailing-whitespace)
+#+END_SRC
+
+** =C-c e= Edit =~/.emacs.d/emacs-config.org=
+#+BEGIN_SRC emacs-lisp
+(defun config-visit ()
+  (interactive)
+  (find-file "~/.emacs.d/emacs-config.org"))
+(global-set-key (kbd "C-c e") 'config-visit)
+#+END_SRC
+
+** =C-c r= =~/.emacs.d/emacs-config.org=
+Simply pressing Control-c r will reload this file, very handy. You can also manually invoke config-reload.
+#+BEGIN_SRC emacs-lisp
+(defun config-reload ()
+  "Reloads ~/.emacs.d/emacs-config.org at runtime"
+  (interactive)
+  (org-babel-load-file (expand-file-name "~/.emacs.d/emacs-config.org")))
+(global-set-key (kbd "C-c r") 'config-reload)
+#+END_SRC
+
+* WITTY SCRATCH MESSAGE
+Because I am so damned funny.
+#+BEGIN_SRC emacs-lisp
+(setq initial-scratch-message ";;  SCRATCH! Ah-ha!\n;;  Buffer of the Universe\n\n\n")
+#+END_SRC
+
+* APPEARANCE
+Because we all want to look purty.
+#+BEGIN_SRC emacs-lisp
+(setq column-number-mode t) ;; columns and rows in mode line
+(setq-default cursor-type 'bar)
+(setq-default line-spacing 0)
+(setq-default frame-title-format "%b (%f)") ;; full path in the title bar.
+(setq-default global-display-line-numbers-mode t)
+(when window-system (global-hl-line-mode t)) ;; hilite line only in GUI
+
+(setq initial-frame-alist '((width . 135) (height . 165)))
+(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+(add-to-list 'default-frame-alist '(ns-appearance . light))
+
+(global-visual-line-mode t) ;; ?
+
+;; themes
+(load-theme 'tsdh-light)
+;; (load-theme 'tsdh-dark)
+;; (load-theme 'nord)
+;; also cool... kaolin, gruvbox, spacemacs
+
+
+;; icons
+;;(use-package all-the-icons
+;;  :ensure t)
+
+;; fonts
+;;(set-face-attribute 'default nil :font "Inconsolata")
+;;(set-face-attribute 'default nil :font "Cousine")
+;;(set-face-attribute 'default nil :font "SF Pro Display")
+;;(set-face-attribute 'default nil :font "Menlo")
+;;(set-face-attribute 'default nil :font "Hack")
+(set-face-attribute 'default nil :font "Iosevka-17")
+;; frame size...
+(setq initial-frame-alist '((width . 140) (height . 440)))
+
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ '(Info-quoted ((t (:foreground "red" :family "Hack"))))
+ '(minibuffer-prompt ((t (:foreground "#6BA9DC" :family "Menlo-16")))))
+#+END_SRC
+
+* WINDOW MANAGEMENT
+"undo” and “redo”, =C-c left= and =C-c right=, like navigating bacwards and forwards through content in windows that have changed content. It can also be activated with Activate it with =M-x winner-mode RET=.
+#+BEGIN_SRC emacs-lisp
+(when (fboundp 'winner-mode)
+      (winner-mode 1))
+#+END_SRC
+
+Split vertically by default ... eg when opening two files from cmd line
+#+BEGIN_SRC emacs-lisp
+(split-window-right)
+#+END_SRC
+
+* PACKAGE MANAGEMENT
+in init.el
+
+* INSTALLED PACKAGES
+- M-x package-list-packages
+- M-x package-refresh-contents
+
+** exec-path-from-shell
+A GNU Emacs library to ensure environment variables inside Emacs look the same as in the user's shell.
+
+Motivation
+Ever find that a command works in your shell, but not in Emacs?
+
+This happens a lot on OS X, where an Emacs instance started from the GUI inherits a default set of environment variables.
+
+This library solves this problem by copying important environment variables from the user's shell: it works by asking your shell to print out the variables of interest, then copying them into the Emacs environment.
+#+BEGIN_SRC emacs-lisp
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
+#+END_SRC
+
+** try
+Try out a package before installing it.
+#+BEGIN_SRC emacs-lisp
+(use-package try
+  :ensure t)
+#+END_SRC
+
+** saveplace
+Save the place of the cursor in each file, and restore it upon re-opening.
+#+BEGIN_SRC emacs-lisp
+(use-package saveplace
+  :defer nil
+  :config
+  (save-place-mode))
+#+END_SRC
+
+** which-key
+which-key provides the minor mode which-key-mode for Emacs. The mode displays
+the key bindings following your currently entered incomplete command (a
+prefix) in a popup. For example, after enabling the minor mode if you enter
+=C-x= and wait for the default of 1 second the minibuffer will expand with all
+of the available key bindings that follow =C-x=.
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+  :ensure t
+  :config
+  (which-key-mode))
+#+END_SRC
+
+** smex 
+Smex is a M-x enhancement for Emacs. Built on top of IDO, it provides a convenient interface to your recently and most frequently used commands. And to all the other commands, too.
+
+Extras: Limit commands to those relevant to the active major mode. Show frequently used commands that have no key bindings.
+
+[https://www.emacswiki.org/emacs/Smex[https://www.emacswiki.org/emacs/Smex]]
+
+#+BEGIN_SRC emacs-list
+(use-package smex
+  :ensure t
+  :init (smex-initialize))
+
+;; Modify smex so that typing a space will insert a hyphen ‘-’ like in normal M-x?
+
+      (defadvice smex (around space-inserts-hyphen activate compile)
+        (let ((ido-cannot-complete-command 
+               `(lambda ()
+                  (interactive)
+                  (if (string= " " (this-command-keys))
+                      (insert ?-)
+                    (funcall ,ido-cannot-complete-command)))))
+          ad-do-it))
+#+END_SRC
+
+
+** beacon
+Whenever the window scrolls a light will shine on top of your cursor so
+you know where it is.
+
+https://github.com/Malabarba/beacon/tree/bde78180c678b233c94321394f46a81dc6dce1da
+
+#+BEGIN_SRC emacs-lisp
+(use-package beacon
+  :ensure t
+  :init
+  (setq beacon-color "#6BA9DC") ;; blue-ish
+  (beacon-mode 1))
+#+END_SRC
+
+** ace-window
+  Ace-window-- displays window number, access with that number
+  =C-x o= <window number>
+
+#+BEGIN_SRC emacs-lisp
+(use-package ace-window
+  :ensure t
+  :init
+  (progn
+      (global-set-key [remap other-window] 'ace-window)))
+#+END_SRC
+
+** swiper/ ivy and counsel
+
+*** counsel
+
+#+BEGIN_SRC emacs-lisp
+   (use-package counsel
+:ensure t
+  :bind
+  (("M-y" . counsel-yank-pop)
+   :map ivy-minibuffer-map
+   ("M-y" . ivy-next-line)))
+#+END_SRC
+
+
+*** swiper
+
+#+BEGIN_SRC emacs-lisp
+(use-package swiper
+  :ensure t
+  :bind (("C-s" . swiper-isearch)
+	 ("C-r" . swiper-isearch)
+	 ("C-c C-r" . ivy-resume)
+	 ("M-x" . counsel-M-x)
+	 ("C-x C-f" . counsel-find-file)))
+#+END_SRC
+
+*** ivy
+
+#+BEGIN_SRC emacs-lisp
+(use-package ivy
+  :ensure t
+  :diminish (ivy-mode)
+  :bind (("C-x b" . ivy-switch-buffer))
+  :config
+  (ivy-mode 1)
+  (setq ivy-use-virtual-buffers t)
+  (setq ivy-count-format "%d/%d ")
+  (setq ivy-display-style 'fancy))
+
+  (setq ivy-use-virtual-buffers t)
+  (setq enable-recursive-minibuffers t)
+  (global-set-key (kbd "C-c C-r") 'ivy-resume)
+#+END_SRC
+
+
+** dired+ -- BROKEN??
+A slightly more advanced version of =dired= which extends functionalities provided by standard GNU Emacs libraries dired.el, dired-aux.el, and dired-x.el. The standard functions are all available, plus many more.
+https://www.emacswiki.org/emacs/DiredPlus
+https://www.gnu.org/software/emacs/refcards/pdf/dired-ref.pdf
+
+;;#+BEGIN_SRC emacs-lisp
+;;(use-package dired+
+;;:ensure t
+;;:config (require 'dired+)
+;;)
+;;#+END_SRC
+
+** pcre2el
+
+Use Perl compatible regexps everywhere in preference to elisp's weirdness.
+https://github.com/joddie/pcre2el
+
+#+BEGIN_SRC emacs-lisp
+(use-package pcre2el
+:ensure t
+:config
+(pcre-mode)
+)
+#+END_SRC
+
+** yasnippet
+The [https://github.com/joaotavora/yasnippet[yasnippet project]] lets you insert snippets of code. A snippet is a template that can have substitutions replaced either manually or programmatically. The choice of which template to choose and expand is based on the buffer’s mode.
+=M-x yas-new-snippet=
+
+See http://www.howardism.org/Technical/Emacs/templates-tutorial.html  for a decent tutorial
+
+#+BEGIN_SRC emacs-lisp
+(use-package yasnippet
+  :ensure t
+  :init
+  (yas-global-mode 1)
+  :config
+  (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
+#+END_SRC
+
+** keycast (BROKEN HERE??)
+DOES NOT SEEM TO WORK -- 2020-04-01, but also does not seen to break anything.
+Keycast shows which keys have been pressed in the modeline... very useful for when screencasting. Thanks to Prosesilaoz Stavrou for this tip.
+https://protesilaos.com/dotemacs/#h:e8e51a73-e583-4250-ac26-15627cd93932
+
+#+BEGIN_SRC emacs-lisp
+(use-package moody
+  :config
+  :ensure t)
+
+(use-package keycast
+  :ensure t
+  :after moody
+  :commands keycast-mode
+  :config
+  (setq keycast-window-predicate 'moody-window-active-p)
+  (setq keycast-separator-width 1)
+  (setq keycast-insert-after 'mode-line-buffer-identification)
+  (setq keycast-remove-tail-elements nil))
+#+END_SRC
+
+** IDO
+This is a sort of autocomplete... Ivy or Helm may be more powerful alternatives.
+#+BEGIN_SRC emacs-lisp
+;; ido -- a form of autocomplete
+(use-package ido
+  :disabled
+  :config
+  (ido-mode 1))
+(setq ido-enable-flex-matching t)
+(setq ido-create-new-buffer 'always)
+(setq ido-everywhere t)
+(setq org-completion-use-ido t)
+;; next 3 lines new additions
+(setq ido-use-virtual-buffers t)
+(setq ido-use-filename-at-point nil)
+(setq ido-auto-merge-work-directories-length -1)
+(defalias 'list-buffers 'ibuffer)
+#+END_SRC
+
+*** ido-completing-read+
+#+BEGIN_SRC emacs-lisp
+(use-package ido-completing-read+
+  :disabled
+  :config
+  (ido-ubiquitous-mode 1))
+#+END_SRC
+
+*** ido-vertical-mode
+#+BEGIN_SRC emacs-lisp
+(use-package ido-vertical-mode
+    :ensure t
+    :init
+    (ido-vertical-mode 1))
+(setq ido-vertical-define-keys 'C-n-and-C-p-only)
+#+END_SRC
+
+** projectile CHECK THIS FOR ERRORS...
+
+
+(use-package projectile
+  :ensure t
+  :config
+  (define-key-node-map (kbd "C-x p") 'projectile-command-map)
+  projectile mode 1)
+
+** dashboard
+https://github.com/emacs-dashboard/emacs-dashboard
+
+#+BEGIN_SRC emacs-lisp
+(use-package dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook))
+
+;; Set the title
+(setq dashboard-banner-logo-title "Stallman nobis haec otia fecit.")
+
+;; Set the banner
+(setq dashboard-startup-banner 'logo)
+;; Value can be
+;; 'official which displays the official emacs logo
+;; 'logo which displays an alternative emacs logo
+;; 1, 2 or 3 which displays one of the text banners
+
+"images/The_GNU_logo.png" ;; which displays whatever image you would prefer
+
+;; Content is not centered by default. To center, set
+(setq dashboard-center-content t)
+
+;; To disable shortcut "jump" indicators for each section, set
+(setq dashboard-show-shortcuts t) ;; disable later
+
+;; To customize which widgets are displayed, you can use the following snippet
+
+(setq dashboard-items '((recents  . 5)
+                        (bookmarks . 5)
+                        (projects . 2) ;; not really using this yet
+                        (agenda . 5) ;; not really using this yet
+                        ;;(registers . 5) ;; not really using this yet
+                        ))
+
+;; To add icons to the widget headings and their items:
+
+(setq dashboard-set-heading-icons t)
+(setq dashboard-set-file-icons t)
+
+#+END_SRC
+
+** doom modeline
+#+BEGIN_SRC emacs-lisp :eval no
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1))
+#+END_SRC
+
+** spaceline
+#+BEGIN_SRC emacs-lisp 
+(use-package spaceline
+  :config
+  (require 'spaceline-config)
+  (setq spaceline-buffer-encoding-abbrev-p nil)
+  (setq spaceline-line-column-p nil)
+  (setq spaceline-line-p nil)
+  (setq powerline-default-separator 'arrow)
+  :init
+ ;;(spaceline-helm-mode) ;; When using helm, mode line looks prettier.
+ (spaceline-spacemacs-theme)
+)
+(use-package spaceline-all-the-icons 
+  :after spaceline
+  :config (spaceline-all-the-icons-theme))
+
+#+END_SRC
+
+** Music - lastfm and vuiet
+
+https://github.com/mihaiolteanu/lastfm.el
+
+https://www.last.fm/api/account/create
+Application name: vuiet
+API key:  	      64c0bb983b69bfe9fa4caa2193aa440f
+Shared secret:  	572bf2ca23e17bb53426d20abdbcfc7d
+Registered to:    yearluk
+
+https://github.com/mihaiolteanu/vuiet
+
+*** lastfm
+#+BEGIN_SRC emacs-lisp
+(use-package lastfm
+  :ensure t
+  :config)
+#+END_SRC
+
+*** vuiet
+#+BEGIN_SRC emacs-lisp
+(use-package vuiet
+  :ensure t
+  :config
+  :after lastfm)
+#+END_SRC
+
+* LISP editing
+Gratuitoussly stolen from: https://gitlab.com/buildfunthings/emacs-config/-/blob/master/loader.org
+#+BEGIN_SRC emacs-lisp
+(use-package paredit
+  :diminish paredit-mode
+  :config
+  (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+  (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+  (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+  (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+  (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+  :bind (("C-c d" . paredit-forward-down))
+  )
+
+;; Ensure paredit is used EVERYWHERE!
+(use-package paredit-everywhere
+  :diminish paredit-everywhere-mode
+  :config
+  (add-hook 'list-mode-hook #'paredit-everywhere-mode))
+
+(use-package highlight-parentheses
+  :diminish highlight-parentheses-mode
+  :config
+  (add-hook 'emacs-lisp-mode-hook
+            (lambda()
+              (highlight-parentheses-mode)
+              )))
+
+(use-package rainbow-delimiters
+  :config
+  (add-hook 'lisp-mode-hook
+            (lambda()
+              (rainbow-delimiters-mode)
+              )))
+
+(global-highlight-parentheses-mode)
+#+END_SRC
+
+* ORG-MODE
+Well, here goes...
+
+** org-mode keybindings
+
+The Org Mode manual recommends giving org-capture a global keyboard shortcut such as C-c c. Also here are other recommended chords for links and agenda items. From [[https://orgmode.org/manual/Activation.html#Activation][Org-mode Manual 1.3 Activation]]
+#+BEGIN_SRC emacs-lisp
+  (global-set-key (kbd "C-c l") 'org-store-link)
+  (global-set-key (kbd "C-c a") 'org-agenda)
+  (global-set-key (kbd "C-c c") 'org-capture)
+#+END_SRC
+
+** org-mode general
+
+Default directory for org files.
+#+BEGIN_SRC emacs-lisp
+  (setq org-directory (expand-file-name "~/org"))
+#+END_SRC
+
+Protect subtree from accidental deletion:
+#+BEGIN_SRC emacs-lisp
+(setq org-ctrl-k-protect-subtree t)
+#+END_SRC
+Should also look into using =org-tree-to-indirect-buffer= as much as possible.
+See
+- https://www.reddit.com/r/orgmode/comments/fuvdqv/org_notetaking_workflow_with_orgroam/fmhl3ml/
+- https://karl-voit.at/2014/08/20/org-losses-determining-post-commit/
+
+Hide the markers that indicate /italic/ *bold* and so on. Should probably rewrite as a toggle function.
+#+BEGIN_SRC emacs-lisp
+    (setq org-hide-emphasis-markers t)
+#+END_SRC
+
+An Easy-to-add emacs-lisp template...
+Hitting tab after an “<el” in an org-mode file will create a template for elisp insertion.
+#+BEGIN_SRC emacs-lisp
+    (add-to-list 'org-structure-template-alist
+        '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
+#+END_SRC
+
+Export with smart quotes
+#+BEGIN_SRC emacs-lisp
+    (setq org-export-with-smart-quotes t)
+#+END_SRC
+
+Automatically log done times in todo items.
+#+BEGIN_SRC emacs-lisp
+    (setq org-log-done t)
+#+END_SRC
+
+Keep the indentation well structured by setting =org-startup-indented= to =t=. This is a must have. Makes it feel less like editing a big text file and more like a purpose built editor for org-mode that forces the indentation.
+#+BEGIN_SRC emacs-lisp
+   (setq org-startup-indented t)
+#+END_SRC
+
+By default, org-indent produces an indicator =”Ind”= in the modeline. Use =diminish= to hide it. I also like to increase the indentation a bit so that the levels are more visible.
+SEEMS TO BE BROKEN --
+#+BEGIN_SRC emacs-lisp
+;;(use-package org-indent
+;;  :ensure t ;; was nil
+;;  :diminish
+;;  :custom
+;;  (org-indent-indentation-per-level 4))
+#+END_SRC
+
+Log stuff into the LOGBOOK drawer by default
+#+BEGIN_SRC emacs-lisp
+;;  (org-log-into-drawer t)
+#+END_SRC
+
+** org-drill
+Org-Drill is an extension for Org mode. Org-Drill uses a spaced repetition algorithm to conduct interactive "drill sessions", using org files as sources of facts to be memorised. Each topic is treated as a "flash card". The material to be remembered is presented to the student in random order. The student rates his or her recall of each item, and this information is used to schedule the item for later revision.
+
+[[https://orgmode.org/worg/org-contrib/org-drill.html
+]]
+#+BEGIN_SRC emacs-lisp
+;;(require 'org-drill)
+(use-package org-drill
+  :ensure t)
+#+END_SRC
+** org-bullets
+Make bullets purdy.
+#+BEGIN_SRC emacs-lisp
+(use-package org-bullets
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+#+END_SRC
+
+** org-capture templates
+Default target file for capture notes.
+#+BEGIN_SRC emacs-lisp
+  (setq org-default-notes-file (concat org-directory "~/org/scratch.org"))
+#+END_SRC
+
+(setq org-capture-templates
+    '(
+
+  ("l" "Link" entry (file+headline as/gtd "Collect")
+        "* TODO %a %? %^G\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n")
+
+  ("q" "Quotation" entry (file "~/org/quotes.org")
+       "Quote\n%^{Quote}\n Source:\n\t~~%^{Source}\n%  :empty-lines 1 )
+
+  ("w" "Word and definition" entry (file+headline "~/org/scratch.org" "Words")
+      "New Word\n%^{Word}\n Definition:\n%^{Definition}\n%U  :empty-lines 1")
+
+  ("m" "mail todo" entry (file+headline "~/org/todo.org" "Tasks")
+         "* TODO [#A] %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n%a\n")
+
+  ("j" "Journal" entry (file+datetree "~/org/diary.org")
+         "* %?\nEntered on: %U\n  %i\n  ")
+
+  ("n" "Note" entry (file+headline "~/org/scratch.org" "Notes")
+       "** %?\n %U " :empty-lines 1)
+
+  ("N" "Note with Clipboard" entry (file+headline "~/org/scratch.org" "Notes")
+       "** %?\n %U\n  %c" :empty-lines 1)
+
+  ("t" "Todo" entry (file+headline "~/org/todo.org" "* Tasks")
+      "* TODO %?\n  %i\n  %a")
+
+   ("W" "Word and definition" entry (file+headline "~/org/scratch.org" "Words")
+      "New Word\n%^{Word}\n Definition:\n%^{Definition}\n%U  :empty-lines 1")
+
+    ("v" "Vocabulary Item" entry
+(file+headline "~/org/scratch.org" "* Words")
+
+       ;; (file "~/org/vocab.org")
+        "* Drill :drill:\n:PROPERTIES:\n:DRILL_CARD_TYPE: twosided\n:END:\n**
+Item\n%^{New Item}\n** Explanation\n%^{Explanation}")
+
+
+;; Sacha's
+ ("J" "Sacha's Journal entry with date" plain
+           (file+datetree+prompt "~/org/diary.org")
+           "%K - %a\n%i\n%?\n"
+           :unnarrowed t) ;; unnarrowed is the default
+
+
+ ("B" " Sacha's Book" entry
+           (file+datetree "~/org/scratch.org" "* RANDOM SHIT")
+           "* %^{Title}  %^g
+  %i
+  *Author(s):* %^{Author} \\\\
+  *ISBN:* %^{ISBN}
+
+  %?
+
+  *Review on:* %^t \\
+  %a
+  %U"
+           :clock-in :clock-resume)
+)
+
+* EMAIL
+
+There's a metric shit-tonne of options here, and I am sure I will mess something up.
+
+email templates with yasnippet:
+http://pragmaticemacs.com/emacs/email-templates-in-mu4e-with-yasnippet/
+
+
+** mu/mu4e
+
+Install =mu= on a Mac, create an index over ~/Maildir, and test:
+#+BEGIN_SRC sh
+brew install mu
+mu index --maildir=~/Maildir
+mu find proton
+#+END_SRC
+
+mu comes with mu4e by default. To verify, check for presence of the relevant elisp files:
+#+BEGIN_SRC sh
+ls /usr/local/share/emacs/site-lisp/mu/mu4e
+#+END_SRC
+
+Now load these files in Emacs and enable mu4e.
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu/mu4e")
+(require 'mu4e)
+#+END_SRC
+
+And then configure =mu4e=, located at  `which mu` == /usr/local/bin/mu
+
+#+BEGIN_SRC emacs-lisp
+(setq
+ mu4e-mu-binary "/usr/local/bin/mu"
+ mue4e-headers-skip-duplicates  t
+ mu4e-view-show-images t
+ mu4e-view-show-addresses t
+ mu4e-compose-format-flowed nil
+ mu4e-date-format "%y/%m/%d"
+ mu4e-headers-date-format "%Y/%m/%d"
+ mu4e-change-filenames-when-moving t
+ mu4e-attachments-dir "~/Downloads"   ;; use the system downloads folder... may want to revisit this.
+
+ mu4e-maildir       "~/Maildir"
+ ;; note that these folders below must start with /
+ ;; the paths are relative to maildir root
+ mu4e-refile-folder "/Archive"
+ mu4e-sent-folder   "/Sent"
+ mu4e-drafts-folder "/Drafts"
+ mu4e-trash-folder  "/Trash")
+
+;; this setting allows to re-sync and re-index mail
+;; by pressing U
+(setq mu4e-get-mail-command  "mbsync -a")
+
+;; Account information
+(setq user-mail-address "stephen@yearl.uk"
+    user-full-name  "Stephen Yearl (yearluk)")
+#+END_SRC
+
+Run with =M-x mu4e=, unless we set keybindings
+
+*** integration with =org-mode=
+Apart from searching, =mu4e= integrates very well with =org-mode= to make it seamless to generate todo items from emails.
+
+#+BEGIN_SRC emacs-lisp
+;;store org-mode links to messages
+(require 'org-mu4e)
+;;store link to message if in header view, not to header query
+(setq org-mu4e-link-query-in-headers-mode nil)
+#+END_SRC
+
+There is also a capture template, above.
+
+
+* CUSTOM FUNCTIONS
+** Toggles for line numbers and whitespace indicators
+
+Shamelessly stolen from: https://protesilaos.com/dotemacs/#h:9ff13b78-42b8-49fe-9e23-0307c780de93
+
+*** Toggle invisible characters (whitespace)
+Viewing invisible characters (whitespace) can be very helpful under certain circumstances. Generally though, I do not keep it active.
+
+#+BEGIN_SRC emacs-lisp
+    (use-package emacs
+        :config
+        (defun prot/toggle-invisibles ()
+        "Toggles the display of indentation and space characters."
+        (interactive)
+        (if (bound-and-true-p whitespace-mode)
+            (whitespace-mode -1)
+            (whitespace-mode)))
+        :bind (("<f6>" . prot/toggle-invisibles)))
+#+END_SRC
+
+*** Display line numbers (buffer-local)
+This toggles the setting for the local buffer. A global option is also available, but I prefer the buffer-specific variant because there are contexts where global display is not useful.
+
+#+BEGIN_SRC emacs-lisp
+(use-package emacs
+  :config
+  (defun prot/toggle-line-numbers ()
+    "Toggles the display of line numbers.  Applies to all buffers."
+    (interactive)
+    (if (bound-and-true-p display-line-numbers-mode)
+        (display-line-numbers-mode -1)
+      (display-line-numbers-mode)))
+  :bind (("<f7>" . prot/toggle-line-numbers)))
+#+END_SRC
+
+** insert-image-org-link
+#+BEGIN_SRC emacs-lisp
+(defun insert-image-org-link (img)
+  "Insert an org image link, choosing the file with completion
+and starting from `my-default-image-directory'."
+  (interactive
+   (list (read-file-name "Image: " "./images/" nil t)))
+  (insert (format "[[%s]]" img)))
+#+END_SRC
+
+** lookup-wiktionary
+wicktionary lookup of word under cursor
+https://elrod.me/posts/2016-11-04-the-ultimate-emacs-based-vocabulary-learning-env.html
+=M-x looku TAB RET=
+use winnermode's =C-c left to get back to buffer
+#+BEGIN_SRC emacs-lisp
+(defun lookup-wiktionary ()
+  (interactive)
+  (let (word)
+    (setq word
+          (if (use-region-p)
+              (buffer-substring-no-properties (region-beginning) (region-end))
+            (current-word)))
+    (setq word (de-latinize (replace-regexp-in-string " " "_" word)))
+    (eww (concat "https://en.wiktionary.org/wiki/" word))))
+
+(defun de-latinize (str)
+  (let ((mapping '((?ū . ?u)
+                   (?ā . ?a)
+                   (?ē . ?e)
+                   (?ī . ?i)
+                   (?ō . ?o))))
+    (mapcar (function (lambda (x)
+                        (alist-get x mapping x 0)))
+            str)))
+
+
+#+END_SRC
+
+
+* Some packages to evaluate
+- M-x package-list-packages
+- M-x package-refresh-contents
+
+
+
+- ido / ido-ubiquitous / flx-ido / ido-vertical is wonderful!
+- linum
+- vterm -- a better eshell?
+- flycheck
+- org-drill -- spaced derpition, replace Anki??
+- org-beautify?
+- org-capture
+_ yasnippets : http://www.howardism.org/Technical/Emacs/templates-tutorial.html
+- ox-latex
+- ox-hugo
+- eshell
+- ivy
+- magit
+- projectile
+- counsel
+- company
+- helm
+- linenum-relative
+- smex
+- elfeed -- RSS /news reader ?
+- swiper? -- searching
+
+
+* some themes to look into
+see also the APPEARANCES section in this file for fonts and such
+- https://github.com/nashamri/spacemacs-theme
+- https://github.com/NicolasPetton/zerodark-theme
+- https://github.com/arcticicestudio/nord-emacs
+- https://github.com/mswift42/warm-night-theme
+- https://github.com/greduan/emacs-theme-gruvbox
+- https://github.com/kunalb/poet prose oriented, quite nice
