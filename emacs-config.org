@@ -677,6 +677,12 @@ The Org Mode manual recommends giving org-capture a global keyboard shortcut suc
 
 ** org-mode general
 
+"<s TAB would not work... there are some changes with org-structure-t"
+org-insert-structure-template bound to C-c C-,
+#+BEGIN_SRC emacs-lisp
+(require 'org-tempo)
+#+END_SRC
+
 Default directory for org files.
 #+BEGIN_SRC emacs-lisp
   (setq org-directory (expand-file-name "~/org"))
@@ -694,13 +700,6 @@ See
 Hide the markers that indicate /italic/ *bold* and so on. Should probably rewrite as a toggle function.
 #+BEGIN_SRC emacs-lisp
     (setq org-hide-emphasis-markers t)
-#+END_SRC
-
-An Easy-to-add emacs-lisp template...
-Hitting tab after an “<el” in an org-mode file will create a template for elisp insertion.
-#+BEGIN_SRC emacs-lisp
-    (add-to-list 'org-structure-template-alist
-        '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
 #+END_SRC
 
 Export with smart quotes
@@ -732,6 +731,7 @@ Log stuff into the LOGBOOK drawer by default
 #+BEGIN_SRC emacs-lisp
 ;;  (org-log-into-drawer t)
 #+END_SRC
+
 
 ** org-drill
 Org-Drill is an extension for Org mode. Org-Drill uses a spaced repetition algorithm to conduct interactive "drill sessions", using org files as sources of facts to be memorised. Each topic is treated as a "flash card". The material to be remembered is presented to the student in random order. The student rates his or her recall of each item, and this information is used to schedule the item for later revision.
