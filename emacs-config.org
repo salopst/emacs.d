@@ -677,9 +677,13 @@ The Org Mode manual recommends giving org-capture a global keyboard shortcut suc
 
 ** org-mode general
 
-"<s TAB would not work... there are some changes with org-structure-t"
-org-insert-structure-template bound to C-c C-,
+=<s TAB= would not work... there are some changes with orgmode 9.2, where =org-insert-structure-template=¸ bound to =C-c C-= which opens a dialog box. This is inconvenient. Thhis code should restore previouss tab completion.
 #+BEGIN_SRC emacs-lisp
+(add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+(add-to-list 'org-structure-template-alist '("pl" . "src perl"))
+(add-to-list 'org-structure-template-alist '("py" . "src python"))
+(add-to-list 'org-structure-template-alist '("rb" . "src ruby"))
+(add-to-list 'org-structure-template-alist '("sh" . "src sh"))
 (require 'org-tempo)
 #+END_SRC
 
@@ -739,9 +743,11 @@ Org-Drill is an extension for Org mode. Org-Drill uses a spaced repetition algor
 [[https://orgmode.org/worg/org-contrib/org-drill.html
 ]]
 #+BEGIN_SRC emacs-lisp
-;;(require 'org-drill)
 (use-package org-drill
   :ensure t)
+(setq org-drill-maximum-items-per-session 40) ;; default is 30 cards
+(setq org-drill-maximum-duration 30)          ;; default is 20 mins
+(setq org-drill-learn-fraction 0.40)          ;; default is .50 lower = review interval grows less quickly
 #+END_SRC
 ** org-bullets
 Make bullets purdy.
