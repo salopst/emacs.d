@@ -893,6 +893,24 @@ There is also a capture template, above.
 
 
 * CUSTOM FUNCTIONS
+** Corrects double capitals
+Problem found at with answer from https://emacs.stackexchange.com/questions/13970/fixing-double-capitals-as-i-type
+ Added =se/= to name space it. se == stackexchange
+ Might want a different keybinding, though.
+
+#+BEGIN_SRC emacs-lisp 
+(defun se/space-plus-more ()
+  (interactive)
+  (save-excursion
+    (backward-word 1)
+    (let ((case-fold-search))
+      (when (looking-at-p "[A-Z]\\{2\\}.*?[a-z]+.*?\\b")
+        (capitalize-word 1))))
+  (self-insert-command 1))
+
+(define-key org-mode-map (kbd "<SPC>") #'se/space-plus-more)
+
+#+END_SRC
 ** Toggles for line numbers and whitespace indicators
 
 Shamelessly stolen from: https://protesilaos.com/dotemacs/#h:9ff13b78-42b8-49fe-9e23-0307c780de93
