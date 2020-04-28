@@ -1,8 +1,9 @@
 # -*- mode: org; coding: utf-8 -*-
 #+AUTHOR: yearluk
-#+DATE: 2020-04-19
+#+DATE: 2020-04-28
 #+FILENAME: xolotl.maranlan:~/.emacs.d/emacs-config.org
 #+TAGS: config dotfile emacs
+#+STARTUP: overview
 #+OPTIONS: toc:nil tangle:yes
 
 
@@ -40,7 +41,7 @@ Optionally enable debug-on-error.
 #+END_SRC
 
 * MACBOOK PRO BINDINGS -- disabled for now
-Everybody knows about moving Control to Caps Lock. And then there's this from 
+Everybody knows about moving Control to Caps Lock. And then there's this from
 http://whattheemacsd.com/
 
 #+BEGIN_SRC emacs-lisp
@@ -56,6 +57,13 @@ The good news is that one can also bind the Function-key to =Hyper H-= - without
 So now I can use crazy keybindings like =H-SPC= /hyperspace/.
 
 * MY MACHINE
+
+on macOS, ls doesn't support the --dired option while on Linux it is supported.
+#+BEGIN_SRC emacs-lisp
+  (when (string= system-type "darwin")
+    (setq dired-use-ls-dired nil))
+#+END_SRC
+
 
 from Harold Abrabs: https://github.com/howardabrams/dot-files/blob/master/emacs.org
 
@@ -102,8 +110,6 @@ http://endlessparentheses.com/ispell-and-abbrev-the-perfect-auto-correct.html
 ;; If you only want it on in text and derived modes, you could do something like this:
 ;; (add-hook 'text-mode-hook #'abbrev-mode)
 #+END_SRC
-
-
 * PERSONAL INFO. -- BROKEN until I can call in from external file
 #+BEGIN_SRC emacs-lisp
 (load "personal-info")
@@ -119,7 +125,6 @@ http://endlessparentheses.com/ispell-and-abbrev-the-perfect-auto-correct.html
 ;;#+SETUPFILE: "~/.emacs.d/personal-info.org"  src emacs-lisp
 ;; #+SETUPFILE: "~/.emacs.d/personal-info.el"  src emacs-lisp
 ;;#+END_SRC
-
 
 * REMOVE ANNOYANCES
 Emacs has a few annoyances out-of-the-box, so let's rid ourselves of these iniquities.
@@ -144,6 +149,19 @@ Emacs has a few annoyances out-of-the-box, so let's rid ourselves of these iniqu
 (setq confirm-kill-processes nil)    ;; Don't ask to kill processes when exiting.
 
 (define-key key-translation-map (kbd "ESC") (kbd "C-g")) ;; FU muscle memory
+#+END_SRC
+
+The default tab stops are 8 spaces appart:
+    (8 16 24 32 40 48 56 64 72 80 88 96 104 112 120)
+Using some manual editing, you can change this:
+#+BEGIN_SRC Example
+(setq tab-stop-list '(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60
+                          64 68 72 76 80 84 88 92 96 100 104 108 112
+                          116 120))
+#+END_SRC
+Or more concisely:
+#+BEGIN_SRC emacs-lisp
+  (setq tab-stop-list (number-sequence 4 120 4))
 #+END_SRC
 
 * GENERAL
@@ -326,7 +344,7 @@ of the available key bindings that follow =C-x=.
   (which-key-mode))
 #+END_SRC
 
-** smex 
+** smex
 Smex is a M-x enhancement for Emacs. Built on top of IDO, it provides a convenient interface to your recently and most frequently used commands. And to all the other commands, too.
 
 Extras: Limit commands to those relevant to the active major mode. Show frequently used commands that have no key bindings.
@@ -341,7 +359,7 @@ Extras: Limit commands to those relevant to the active major mode. Show frequent
 ;; Modify smex so that typing a space will insert a hyphen ‘-’ like in normal M-x?
 
       (defadvice smex (around space-inserts-hyphen activate compile)
-        (let ((ido-cannot-complete-command 
+        (let ((ido-cannot-complete-command
                `(lambda ()
                   (interactive)
                   (if (string= " " (this-command-keys))
@@ -430,12 +448,12 @@ A slightly more advanced version of =dired= which extends functionalities provid
 https://www.emacswiki.org/emacs/DiredPlus
 https://www.gnu.org/software/emacs/refcards/pdf/dired-ref.pdf
 
-#+BEGIN_SRC emacs-lisp :eval no
+;;#+BEGIN_SRC emacs-lisp :eval no :results silent :exports none
   (use-package dired+
     :ensure t
     :config (require 'dired+)
   )
-#+END_SRC
+;;#+END_SRC
 
 ** pcre2el
 
@@ -465,26 +483,7 @@ See http://www.howardism.org/Technical/Emacs/templates-tutorial.html  for a dece
   (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
 #+END_SRC
 
-** keycast BROKEN??
-DOES NOT SEEM TO WORK -- 2020-04-01, but also does not seen to break anything.
-Keycast shows which keys have been pressed in the modeline... very useful for when screencasting. Thanks to Prosesilaoz Stavrou for this tip.
-https://protesilaos.com/dotemacs/#h:e8e51a73-e583-4250-ac26-15627cd93932
 
-#+BEGIN_SRC emacs-lisp :eval o
-(use-package moody
-  :config
-  :ensure t)
-
-(use-package keycast
-  :ensure t
-  :after moody
-  :commands keycast-mode
-  :config
-  (setq keycast-window-predicate 'moody-window-active-p)
-  (setq keycast-separator-width 1)
-  (setq keycast-insert-after 'mode-line-buffer-identification)
-  (setq keycast-remove-tail-elements nil))
-#+END_SRC
 
 ** IDO
 This is a sort of autocomplete... Ivy or Helm may be more powerful alternatives.
@@ -521,14 +520,7 @@ This is a sort of autocomplete... Ivy or Helm may be more powerful alternatives.
 (setq ido-vertical-define-keys 'C-n-and-C-p-only)
 #+END_SRC
 
-** projectile BROKEN??
-#+BEGIN_SRC emacs-lisp
-(use-package projectile
-  :ensure t
-  :config
-  (define-key-node-map (kbd "C-x p") 'projectile-command-map)
-  projectile mode 1)
-#+END_SRC
+
 ** dashboard -- nice looking put perhaps a little irritating
 https://github.com/emacs-dashboard/emacs-dashboard
 
@@ -580,7 +572,7 @@ https://github.com/emacs-dashboard/emacs-dashboard
 #+END_SRC
 
 ** spaceline
-#+BEGIN_SRC emacs-lisp 
+#+BEGIN_SRC emacs-lisp
 (use-package spaceline
   :config
   (require 'spaceline-config)
@@ -592,7 +584,7 @@ https://github.com/emacs-dashboard/emacs-dashboard
  ;;(spaceline-helm-mode) ;; When using helm, mode line looks prettier.
  (spaceline-spacemacs-theme)
 )
-(use-package spaceline-all-the-icons 
+(use-package spaceline-all-the-icons
   :after spaceline
   :config (spaceline-all-the-icons-theme))
 
@@ -667,13 +659,14 @@ Gratuitoussly stolen from: https://gitlab.com/buildfunthings/emacs-config/-/blob
 * ORG-MODE
 Well, here goes...
 
-** org-mode keybindings
+- [https://orgmode.org/manual/Using-Header-Arguments.html#Using-Header-Arguments[] source block header arguments]
 
+** org-mode keybindings
 The Org Mode manual recommends giving org-capture a global keyboard shortcut such as C-c c. Also here are other recommended chords for links and agenda items. From [[https://orgmode.org/manual/Activation.html#Activation][Org-mode Manual 1.3 Activation]]
 #+BEGIN_SRC emacs-lisp
-  (global-set-key (kbd "C-c l") 'org-store-link)
   (global-set-key (kbd "C-c a") 'org-agenda)
   (global-set-key (kbd "C-c c") 'org-capture)
+  (global-set-key (kbd "C-c l") 'org-store-link)
 #+END_SRC
 
 ** org-mode general
@@ -688,9 +681,12 @@ The Org Mode manual recommends giving org-capture a global keyboard shortcut suc
 (require 'org-tempo)
 #+END_SRC
 
-*** Default directory for org files
+*** Default startups, directory for org files, and principal org file
 #+BEGIN_SRC emacs-lisp
   (setq org-directory (expand-file-name "~/org"))
+  (setq org-default-notes-file (concat org-directory "/scratch.org"))
+  (setq org-startup-indented t)
+;;  (setq org-startup-folded (quote overview))
 #+END_SRC
 
 *** Protect subtree from accidental deletion
@@ -717,27 +713,16 @@ See
     (setq org-log-done t)
 #+END_SRC
 
-*** org-startup-indented
-Keep the indentation well structured by setting =org-startup-indented= to =t=. This is a must have. Makes it feel less like editing a big text file and more like a purpose built editor for org-mode that forces the indentation.
+** org-ac (autocomplete)-- not sure if I like this.
+
 #+BEGIN_SRC emacs-lisp
-   (setq org-startup-indented t)
+  (use-package org-ac
+    :ensure t
+    :init (progn
+      (require 'org-ac)
+      (org-ac/config-default)))
 #+END_SRC
 
-*** Log into the :LOGBOOK: drawer by default -- BROKEN??
-#+BEGIN_SRC emacs-lisp :eval no
-  (org-log-into-drawer t)
-#+END_SRC
-
-** org-indent -- BROKEN??
-By default, =org-indent= produces an indicator =”Ind”= in the modeline. Use =diminish= to hide it. I also like to increase the indentation a bit so that the levels are more visible.
-SEEMS TO BE BROKEN --
-#+BEGIN_SRC emacs-lisp
-  (use-package org-indent
-    :ensure t ;; was nil
-    :diminish
-    :custom
-    (org-indent-indentation-per-level 4))
-#+END_SRC
 ** org-drill
 Org-Drill is an extension for Org mode. Org-Drill uses a spaced repetition algorithm to conduct interactive "drill sessions", using org files as sources of facts to be memorised. Each topic is treated as a "flash card". The material to be remembered is presented to the student in random order. The student rates his or her recall of each item, and this information is used to schedule the item for later revision.
 
@@ -751,8 +736,8 @@ Org-Drill is an extension for Org mode. Org-Drill uses a spaced repetition algor
 (setq org-drill-learn-fraction 0.40)          ;; default is .50 lower = review interval grows less quickly
 #+END_SRC
 
-There's no doubt that Anki is better for learning on the go, but entering information into it is a pain. 
-[[https://github.com/c-okelly/org_to_anki[Python3 module to convert Txt, Org, Word or LibreOffice files into Anki decks] might be something to look into.
+There's no doubt that Anki is better for learning on the go, but entering information into it is a pain.
+[https://github.com/c-okelly/org_to_anki][Python3 module to convert Txt, Org, Word or LibreOffice files into Anki decks] might be something to look into.
 
 ** org-bullets
 Make bullets purdy.
@@ -764,70 +749,19 @@ Make bullets purdy.
 #+END_SRC
 
 ** org-capture templates
-Default target file for capture notes.
-#+BEGIN_SRC emacs-lisp
-  (setq org-default-notes-file (concat org-directory "~/org/scratch.org"))
-#+END_SRC
-
+#+begin_src emacs-lisp
 (setq org-capture-templates
     '(
 
-  ("l" "Link" entry (file+headline as/gtd "Collect")
-        "* TODO %a %? %^G\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n")
-
-  ("q" "Quotation" entry (file "~/org/quotes.org")
-       "Quote\n%^{Quote}\n Source:\n\t~~%^{Source}\n%  :empty-lines 1 )
-
-  ("w" "Word and definition" entry (file+headline "~/org/scratch.org" "Words")
-      "New Word\n%^{Word}\n Definition:\n%^{Definition}\n%U  :empty-lines 1")
-
-  ("m" "mail todo" entry (file+headline "~/org/todo.org" "Tasks")
-         "* TODO [#A] %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n%a\n")
-
-  ("j" "Journal" entry (file+datetree "~/org/diary.org")
-         "* %?\nEntered on: %U\n  %i\n  ")
-
-  ("n" "Note" entry (file+headline "~/org/scratch.org" "Notes")
-       "** %?\n %U " :empty-lines 1)
-
-  ("N" "Note with Clipboard" entry (file+headline "~/org/scratch.org" "Notes")
-       "** %?\n %U\n  %c" :empty-lines 1)
-
-  ("t" "Todo" entry (file+headline "~/org/todo.org" "* Tasks")
-      "* TODO %?\n  %i\n  %a")
-
-   ("W" "Word and definition" entry (file+headline "~/org/scratch.org" "Words")
-      "New Word\n%^{Word}\n Definition:\n%^{Definition}\n%U  :empty-lines 1")
-
-    ("v" "Vocabulary Item" entry
-(file+headline "~/org/scratch.org" "* Words")
-
-       ;; (file "~/org/vocab.org")
-        "* Drill :drill:\n:PROPERTIES:\n:DRILL_CARD_TYPE: twosided\n:END:\n**
-Item\n%^{New Item}\n** Explanation\n%^{Explanation}")
+        ("q" "Quotation" entry (file+datetree "~/org/quotes.org")
+           "Quote\n%^{Quote}\n Source:\n\t~~%^{Source}\n%"  :empty-lines 1)
 
 
-;; Sacha's
- ("J" "Sacha's Journal entry with date" plain
-           (file+datetree+prompt "~/org/diary.org")
-           "%K - %a\n%i\n%?\n"
-           :unnarrowed t) ;; unnarrowed is the default
 
-
- ("B" " Sacha's Book" entry
-           (file+datetree "~/org/scratch.org" "* RANDOM SHIT")
-           "* %^{Title}  %^g
-  %i
-  *Author(s):* %^{Author} \\\\
-  *ISBN:* %^{ISBN}
-
-  %?
-
-  *Review on:* %^t \\
-  %a
-  %U"
-           :clock-in :clock-resume)
+    )
 )
+#+end_src
+
 
 * EMAIL
 
@@ -909,7 +843,7 @@ Problem found at with answer from https://emacs.stackexchange.com/questions/1397
  Added =se/= to name space it. se == stackexchange
  Might want a different keybinding, though.
 
-#+BEGIN_SRC emacs-lisp 
+#+BEGIN_SRC emacs-lisp
 (defun se/space-plus-more ()
   (interactive)
   (save-excursion
