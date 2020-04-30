@@ -685,7 +685,7 @@ The Org Mode manual recommends giving org-capture a global keyboard shortcut suc
 #+BEGIN_SRC emacs-lisp
   (setq org-directory (expand-file-name "~/org"))
   (setq org-default-notes-file (concat org-directory "/scratch.org"))
-  (setq org-startup-indented t)
+;;  (setq org-startup-indented t)
 ;;  (setq org-startup-folded (quote overview))
 #+END_SRC
 
@@ -713,15 +713,15 @@ See
     (setq org-log-done t)
 #+END_SRC
 
-** org-ac (autocomplete)-- not sure if I like this.
-
-#+BEGIN_SRC emacs-lisp
+** org-ac (autocomplete) -- not sure if I like this
+#+BEGIN_SRC
   (use-package org-ac
     :ensure t
     :init (progn
       (require 'org-ac)
       (org-ac/config-default)))
 #+END_SRC
+
 
 ** org-drill
 Org-Drill is an extension for Org mode. Org-Drill uses a spaced repetition algorithm to conduct interactive "drill sessions", using org files as sources of facts to be memorised. Each topic is treated as a "flash card". The material to be remembered is presented to the student in random order. The student rates his or her recall of each item, and this information is used to schedule the item for later revision.
@@ -750,17 +750,35 @@ Make bullets purdy.
 
 ** org-capture templates
 #+begin_src emacs-lisp
-(setq org-capture-templates
-    '(
+  (setq org-capture-templates
+      '(
+          ("t" "Todo" entry (file+headline "~/org/todo.org" "Tasks")
+              "* TODO %i%?\n  Added: %U")
+          ("r" "Refile" entry (file+headline "~/org/scratch.org" "REFILE")
+              "* %i%?\n  Added: %U")
+          ("a" "Today" entry (file+headline "gtd-test.org" "Tasks")
+              "* TODO %?\n  SCHEDULED: <%<%Y-%m-%d %a>>\n  Added: %U")
+          ("d" "Date" entry (file+datetree+prompt "~/org/journal.org")
+              "* %?\n%t\n")
+	      ("w" "Calendar" entry (file+headline "gtd-test.org" "Calendar")
+              "* %?\n%^t\n")
+          ("j" "Jokes" entry (file "~/org/jokes.org")
+              "\n\n%?\n%U\n" :empty-lines 2)
 
-        ("q" "Quotation" entry (file+datetree "~/org/quotes.org")
-           "Quote\n%^{Quote}\n Source:\n\t~~%^{Source}\n%"  :empty-lines 1)
+          ("q" "Quotation" entry (file "~/org/quotes.org")
+              "* %^{Quote}\n\~\~ %^{Source}\n" :empty-lines 2)
 
+          ("v" "Vocabulary")
+          ("vd" "Vocabulary" entry (file+headline "~/org/vocab.org" "DE")
+           "* %^{The word} :drill:\n Added: %U\n %^{Extended word (may be empty)|%\\1}\n** Translation \n%^{The definition}")
 
+          ("Vd" "Two-sided Vocabulary" entry (file+headline "~/org/vocab.org" "DE")
+           "* <[%^{The word}]> :drill:\n Added: %U\n    :PROPERTIES:\n    :DRILL_CARD_TYPE: twosided\n    :END:\n** Word\n%^{Extended word (may be empty)|%\\1}\n** Definition\n%^{Definition}\n** Examples\n%^{Examples}\n")
 
-    )
-)
+      )
+  )
 #+end_src
+
 
 
 * EMAIL
