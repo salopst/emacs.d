@@ -344,6 +344,30 @@ of the available key bindings that follow =C-x=.
   (which-key-mode))
 #+END_SRC
 
+** CRUX
+A Collection of Ridiculously Useful eXtensions for Emacs. crux bundles a few useful interactive commands to enhance your overall Emacs experience.
+
+[[https://github.com/bbatsov/crux][A Collection of Ridiculously Useful eXtensions]]
+
+Here's how you'd bind some of the commands to keycombos:
+
+(global-set-key [remap move-beginning-of-line] #'crux-move-beginning-of-line)
+(global-set-key (kbd "C-c o") #'crux-open-with)
+(global-set-key [(shift return)] #'crux-smart-open-line)
+(global-set-key (kbd "s-r") #'crux-recentf-find-file)
+(global-set-key (kbd "C-<backspace>") #'crux-kill-line-backwards)
+(global-set-key [remap kill-whole-line] #'crux-kill-whole-line)
+For crux-ispell-word-then-abbrev to be most effective you'll also need to add this to your config:
+
+(setq save-abbrevs 'silently)
+(setq-default abbrev-mode t)
+
+#+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'crux)
+  (package-refresh-contents)
+  (package-install 'crux))
+#+END_SRC
+
 ** smex
 Smex is a M-x enhancement for Emacs. Built on top of IDO, it provides a convenient interface to your recently and most frequently used commands. And to all the other commands, too.
 
@@ -351,7 +375,7 @@ Extras: Limit commands to those relevant to the active major mode. Show frequent
 
 [https://www.emacswiki.org/emacs/Smex[https://www.emacswiki.org/emacs/Smex]]
 
-#+BEGIN_SRC emacs-list
+#+BEGIN_SRC emacs-lisp
 (use-package smex
   :ensure t
   :init (smex-initialize))
@@ -616,7 +640,23 @@ https://github.com/mihaiolteanu/vuiet
   :config
   :after lastfm)
 #+END_SRC
+* Code editing
+Flycheck is a modern on-the-fly syntax checking extension for GNU Emacs
+#+begin_src emacs-lisp
+(use-package flycheck
+  :ensure t
+  :init (global-flycheck-mode))
+#+end_src
+* Blogging
+M-x package-refresh-contents
+M-x package-install <ret> ox-hugo
 
+#+begin_src emacs-lisp
+(use-package ox-hugo
+  :ensure t
+  :after ox)
+
+#+end_src
 * LISP EDITING
 Gratuitoussly stolen from: https://gitlab.com/buildfunthings/emacs-config/-/blob/master/loader.org
 #+BEGIN_SRC emacs-lisp
@@ -756,7 +796,7 @@ Make bullets purdy.
               "* TODO %i%?\n  Added: %U")
           ("r" "Refile" entry (file+headline "~/org/scratch.org" "REFILE")
               "* %i%?\n  Added: %U")
-          ("a" "Today" entry (file+headline "gtd-test.org" "Tasks")
+          ("a" "Today" entry (file+headline "~/org/todo.org" "Tasks")
               "* TODO %?\n  SCHEDULED: <%<%Y-%m-%d %a>>\n  Added: %U")
           ("d" "Date" entry (file+datetree+prompt "~/org/journal.org")
               "* %?\n%t\n")
@@ -766,10 +806,10 @@ Make bullets purdy.
               "\n\n%?\n%U\n" :empty-lines 2)
 
           ("q" "Quotation" entry (file "~/org/quotes.org")
-              "* %^{Quote}\n\~\~ %^{Source}\n" :empty-lines 2)
+              "* %^{Quote}\n\    \~\~ %^{Source}\n" :empty-lines 2)
 
           ("v" "Vocabulary")
-          ("vd" "Vocabulary" entry (file+headline "~/org/vocab.org" "DE")
+          ("vd" "German Vocabulary" entry (file+headline "~/org/vocab.org" "DE")
            "* %^{The word} :drill:\n Added: %U\n %^{Extended word (may be empty)|%\\1}\n** Translation \n%^{The definition}")
 
           ("Vd" "Two-sided Vocabulary" entry (file+headline "~/org/vocab.org" "DE")
